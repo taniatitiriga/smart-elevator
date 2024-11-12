@@ -48,4 +48,20 @@ public class Elevator implements Surface, Weight{
     public String getId() {
         return this.ID;
     }
+
+    public int getMaxWeight() {
+        return maxWeight;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public int[] getFloors() {
+        return floors;
+    }
 }

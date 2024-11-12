@@ -151,26 +151,20 @@ public class Main {
 
         try (Reader reader = new FileReader(ELEVATOR_FILE)) {
             Gson gson = new Gson();
-            List<Map<String, Object>> elevators = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
+            List<Elevator> elevators = gson.fromJson(reader, new TypeToken<List<Elevator>>(){}.getType());
 
             Scanner scanner = new Scanner(System.in);
             OutputDevice.print("Enter elevator ID to load:");
             String elevatorId = scanner.nextLine();
 
-            Map<String, Object> elevatorData = elevators.stream()
-                    .filter(e -> elevatorId.equals(e.get("id")))
-                    .findFirst()
-                    .orElse(null);
+            // Find the elevator by ID using getId()
+            Optional<Elevator> elevatorOpt = elevators.stream()
+                    .filter(e -> e.getId().equals(elevatorId))
+                    .findFirst();
 
-            if (elevatorData != null) {
-                int maxWeight = ((Double) elevatorData.get("maxWeight")).intValue();
-                int width = ((Double) elevatorData.get("width")).intValue();
-                int depth = ((Double) elevatorData.get("depth")).intValue();
-                int currentFloor = ((Double) elevatorData.get("currentFloor")).intValue();
-                List<Double> floorsList = (List<Double>) elevatorData.get("floors");
-                int[] floors = floorsList.stream().mapToInt(Double::intValue).toArray();
-
-                app.addElevator(maxWeight, width, depth, floors, currentFloor);
+            if (elevatorOpt.isPresent()) {
+                Elevator loadedElevator = elevatorOpt.get();
+                app.addElevator(loadedElevator.getMaxWeight(), loadedElevator.getWidth(), loadedElevator.getDepth(), loadedElevator.getFloors(), loadedElevator.getCurrentFloor());
                 runSession(app); // Call session with loaded elevator
             } else {
                 OutputDevice.print("[ERROR] Elevator with ID " + elevatorId + " not found.");
@@ -286,6 +280,7 @@ public class Main {
             }
         }
     }
+    
     private static void loadPeopleFromMemory(Application app) {
         OutputDevice.print("[INFO] Loading people from memory...");
         try (Reader reader = new FileReader(PEOPLE_FILE)) {
