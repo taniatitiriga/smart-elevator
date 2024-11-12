@@ -45,4 +45,7 @@ public class Elevator implements Surface, Weight{
         return currentFloor;
     }
 
+    public String getId() {
+        return this.ID;
+    }
 }
