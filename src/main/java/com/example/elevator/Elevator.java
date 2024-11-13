@@ -64,4 +64,13 @@ public class Elevator implements Surface, Weight{
     public int[] getFloors() {
         return floors;
     }
+
+    public boolean canAccessFloor(int floor) {
+        for (int accessibleFloor : floors) {
+            if (accessibleFloor == floor) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

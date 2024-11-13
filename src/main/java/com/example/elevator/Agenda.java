@@ -97,6 +97,12 @@ public class Agenda {
         if (!queueInside.isEmpty()) {
             topPriorityPerson = queueInside.peek();
             destination = topPriorityPerson.getDestinationFloor();
+
+            // Check if the destination floor is accessible
+            if (!elevator.canAccessFloor(destination)) {
+                OutputDevice.print("[ERROR] Elevator cannot access floor " + destination + ". Ignoring this request.");
+                return elevator.getCurrentFloor(); // Stay on the current floor if the floor is not accessible
+            }
         } else {
             for (Map.Entry<Integer, Queue<Person>> entry : queuesByFloor.entrySet()) {
                 Queue<Person> floorQueue = entry.getValue();
