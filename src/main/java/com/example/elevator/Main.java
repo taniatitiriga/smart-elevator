@@ -7,7 +7,8 @@ import java.io.*;
 import java.util.*;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-
+import com.example.elevator.CustomExceptions.InvalidCommandException;
+import com.example.elevator.CustomExceptions.InvalidNumberFormatException;
 
 public class Main {
     private static final String ELEVATOR_FILE = "elevators.json";
@@ -61,53 +62,65 @@ public class Main {
             String[] inputParts = input.split(" ");
             String command = inputParts[0];
 
-            switch (command) {
-                case "elevator":
-                    if (inputParts.length >= 5) {
-                        try {
-                            int maxWeight = Integer.parseInt(inputParts[1]);
-                            int width = Integer.parseInt(inputParts[2]);
-                            int depth = Integer.parseInt(inputParts[3]);
-                            int currentFloor = Integer.parseInt(inputParts[4]);
-                            int[] floors = {0, 1, 2, 3, 4, 5, 6, 7};  // Example floors
-                            app.addElevator(maxWeight, width, depth, floors, currentFloor);
-                        } catch (NumberFormatException e) {
-                            OutputDevice.print("[ERROR] Invalid number format. Ensure maximum weight, width, depth, and current floor are integers.");
-                        }
-                    } else {
-                        OutputDevice.print("[USAGE] elevator maximum_weight width depth current_floor");
-                    }
-                    break;
-
-                case "person":
-                    if (inputParts.length >= 6) {
-                        String type = inputParts[1];
-                        try {
-                            int weight = Integer.parseInt(inputParts[2]);
-                            int height = Integer.parseInt(inputParts[3]);
-                            int startFloor = Integer.parseInt(inputParts[4]);
-                            int destinationFloor = Integer.parseInt(inputParts[5]);
-
-                            Person person = createPerson(type, weight, height, inputParts);
-                            if (person != null) {
-                                app.addPersonToQueue(person, startFloor, destinationFloor);
+            try {
+                switch (command) {
+                    case "elevator":
+                        if (inputParts.length >= 5) {
+                            try {
+                                int maxWeight = parseInt(inputParts[1]);
+                                int width = parseInt(inputParts[2]);
+                                int depth = parseInt(inputParts[3]);
+                                int currentFloor = parseInt(inputParts[4]);
+                                int[] floors = {0, 1, 2, 3, 4, 5, 6, 7};  // Example floors
+                                app.addElevator(maxWeight, width, depth, floors, currentFloor);
+                            } catch (InvalidNumberFormatException e) {
+                                OutputDevice.print("[ERROR] " + e.getMessage());
                             }
-                        } catch (NumberFormatException e) {
-                            OutputDevice.print("[ERROR] Invalid number format. Please check that weight, height, current floor, and destination floor are integers.");
+                        } else {
+                            throw new InvalidCommandException("Incorrect format for elevator command. Usage: elevator max_weight width depth current_floor");
                         }
-                    } else {
-                        OutputDevice.print("[USAGE] person type weight height current_floor destination_floor [extra: emergency level for staff or walking aid for patients]");
-                    }
-                    break;
+                        break;
 
-                case "start":
-                    app.startSession();
-                    break;
+                    case "person":
+                        if (inputParts.length >= 6) {
+                            String type = inputParts[1];
+                            try {
+                                int weight = parseInt(inputParts[2]);
+                                int height = parseInt(inputParts[3]);
+                                int startFloor = parseInt(inputParts[4]);
+                                int destinationFloor = parseInt(inputParts[5]);
 
-                default:
-                    OutputDevice.print("[ERROR] Unknown command: '" + command + "'. Try 'elevator', 'person', and 'start'.");
-                    break;
+                                Person person = createPerson(type, weight, height, inputParts);
+                                if (person != null) {
+                                    app.addPersonToQueue(person, startFloor, destinationFloor);
+                                }
+                            } catch (InvalidNumberFormatException e) {
+                                OutputDevice.print("[ERROR] " + e.getMessage());
+                            }
+                        } else {
+                            throw new InvalidCommandException("Incorrect format for person command. Usage: person type weight height start_floor destination_floor [extra]");
+                        }
+                        break;
+
+                    case "start":
+                        app.startSession();
+                        break;
+
+                    default:
+                        throw new InvalidCommandException("Unknown command: '" + command + "'. Try 'elevator', 'person', or 'start'.");
+                }
+            } catch (InvalidCommandException e) {
+                OutputDevice.print("[ERROR] " + e.getMessage());
             }
+        }
+    }
+
+    // Helper method to parse integers and throw a custom exception if parsing fails
+    private static int parseInt(String value) throws InvalidNumberFormatException {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new InvalidNumberFormatException("Invalid number format: '" + value + "'. Please enter a valid integer.");
         }
     }
 

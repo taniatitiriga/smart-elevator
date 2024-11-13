@@ -57,7 +57,7 @@ public class IDGenerator {
                 }
             }
             elevatorCount = maxElevatorNum + 1; // Set elevatorCount to one more than the highest existing ID
-            System.out.println("[DEBUG] Initialized elevator count to " + elevatorCount);
+            //System.out.println("[DEBUG] Initialized elevator count to " + elevatorCount);
         } catch (IOException e) {
             System.out.println("[INFO] No existing elevator data found, starting elevator ID from E01.");
             elevatorCount = 1; // Start from E01 if no file or entries are found
@@ -93,9 +93,9 @@ public class IDGenerator {
                     }
                 }
             }
-            System.out.println("[DEBUG] Initialized counts - Patient: " + patientCount + ", Visitor: " + visitorCount + ", Nurse: " + nurseCount + ", Doctor: " + doctorCount);
+            //System.out.println("[DEBUG] Initialized counts - Patient: " + patientCount + ", Visitor: " + visitorCount + ", Nurse: " + nurseCount + ", Doctor: " + doctorCount);
         } catch (IOException e) {
-            System.out.println("[INFO] No existing people data found, starting people IDs from defaults.");
+            //System.out.println("[INFO] No existing people data found, starting people IDs from defaults.");
         }
     }
 }
