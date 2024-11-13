@@ -243,7 +243,6 @@ public class Main {
         }
     }
 
-
     private static void runSession(Application app) {
         OutputDevice.print("\n=== Session Mode ===");
         OutputDevice.print("This session behaves like the demo but includes loading people from memory.");
