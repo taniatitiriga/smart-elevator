@@ -32,4 +32,12 @@ public abstract class Person implements Surface, Weight {
 
     public abstract int getPriorityLevel();
     public int getWeight(){ return this.weight; };
+    public String getID() {
+        return this.ID;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
 }

@@ -27,5 +27,8 @@ public class Doctor extends Person{
         }
         this.emergencyLevel = level;
     }
+    public int getEmergencyLevel() {
+        return emergencyLevel;
+    }
 
 }

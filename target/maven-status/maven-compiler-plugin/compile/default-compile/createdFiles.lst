@@ -1,5 +1,6 @@
 com/example/elevator/Patient$1.class
 com/example/elevator/InputDevice.class
+com/example/elevator/Main$4.class
 com/example/elevator/Nurse.class
 com/example/elevator/Main$2.class
 com/example/elevator/Patient.class
@@ -16,4 +17,5 @@ com/example/elevator/Person.class
 com/example/elevator/WalkingAid.class
 com/example/elevator/Weight.class
 com/example/elevator/Main.class
+com/example/elevator/PersonDeserializer.class
 com/example/elevator/Main$3.class

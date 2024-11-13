@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.*;
 import java.util.*;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 
 public class Main {
@@ -202,29 +204,45 @@ public class Main {
     }
 
     private static void saveElevatorToMemory(int maxWeight, int width, int depth, int currentFloor, int[] floors) {
-        try (Reader reader = new FileReader(ELEVATOR_FILE)) {
-            Gson gson = new Gson();
-            List<Map<String, Object>> elevators = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
-            if (elevators == null) elevators = new ArrayList<>();
+        Gson gson = new Gson();
+        List<Elevator> elevators = new ArrayList<>();
 
-            Map<String, Object> newElevatorData = new HashMap<>();
-            newElevatorData.put("id", IDGenerator.generateElevatorID());
-            newElevatorData.put("maxWeight", maxWeight);
-            newElevatorData.put("width", width);
-            newElevatorData.put("depth", depth);
-            newElevatorData.put("currentFloor", currentFloor);
-            newElevatorData.put("floors", Arrays.stream(floors).boxed().toArray());
-
-            elevators.add(newElevatorData);
-
-            try (Writer writer = new FileWriter(ELEVATOR_FILE)) {
-                gson.toJson(elevators, writer);
-                OutputDevice.print("[INFO] New elevator saved to memory.");
+        // Check if elevators.json exists and read existing elevators
+        File file = new File(ELEVATOR_FILE);
+        if (file.exists()) {
+            // Read existing elevators if file exists
+            try (Reader reader = new FileReader(file)) {
+                elevators = gson.fromJson(reader, new TypeToken<List<Elevator>>(){}.getType());
+                if (elevators == null) elevators = new ArrayList<>();
+            } catch (IOException e) {
+                OutputDevice.print("[ERROR] Failed to read elevator file: " + e.getMessage());
             }
+        } else {
+            // Create the file and initialize it with an empty JSON array if it doesn't exist
+            try {
+                file.createNewFile();
+                try (Writer writer = new FileWriter(file)) {
+                    writer.write("[]"); // Initialize with empty JSON array
+                }
+            } catch (IOException e) {
+                OutputDevice.print("[ERROR] Failed to create elevator file: " + e.getMessage());
+                return;
+            }
+        }
+
+        // Add the new elevator to the list
+        Elevator newElevator = new Elevator(IDGenerator.generateElevatorID(), maxWeight, width, depth, floors, currentFloor);
+        elevators.add(newElevator);
+
+        // Write updated elevator list back to file
+        try (Writer writer = new FileWriter(ELEVATOR_FILE)) {
+            gson.toJson(elevators, writer);
+            OutputDevice.print("[INFO] New elevator saved to memory.");
         } catch (IOException e) {
             OutputDevice.print("[ERROR] Failed to save elevator: " + e.getMessage());
         }
     }
+
 
     private static void runSession(Application app) {
         OutputDevice.print("\n=== Session Mode ===");
@@ -257,6 +275,19 @@ public class Main {
                             Person person = createPerson(type, weight, height, inputParts);
                             if (person != null) {
                                 app.addPersonToQueue(person, startFloor, destinationFloor);
+
+                                // Prepare optional fields based on person type
+                                Map<String, Object> optionalFields = new HashMap<>();
+                                if (person instanceof Doctor) {
+                                    Doctor doctor = (Doctor) person;
+                                    optionalFields.put("emergencyLevel", doctor.getEmergencyLevel());
+                                } else if (person instanceof Patient) {
+                                    Patient patient = (Patient) person;
+                                    optionalFields.put("walkingAid", patient.getWalkingAid().toString());
+                                }
+
+                                // Pass individual fields and optional fields map to savePersonToMemory
+                                savePersonToMemory(type, person.getID(), weight, height, startFloor, destinationFloor, optionalFields);
                             }
                         } catch (NumberFormatException e) {
                             OutputDevice.print("[ERROR] Invalid number format. Ensure weight, height, start floor, and destination floor are integers.");
@@ -280,31 +311,115 @@ public class Main {
             }
         }
     }
-    
+
+    private static void savePersonToMemory(String type, String id, int weight, int height, int startFloor, int destinationFloor, Map<String, Object> optionalFields) {
+        if (id == null || weight <= 0 || height <= 0 || destinationFloor < 0) {
+            OutputDevice.print("[ERROR] Invalid person data. Person not saved to memory.");
+            return;
+        }
+
+        File file = new File(PEOPLE_FILE);
+        Gson gson = new Gson();
+        List<Map<String, Object>> people = new ArrayList<>();
+
+        // Check if people.json exists and read existing people
+        if (file.exists()) {
+            try (Reader reader = new FileReader(file)) {
+                people = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
+                if (people == null) people = new ArrayList<>();
+            } catch (IOException e) {
+                OutputDevice.print("[ERROR] Failed to read people file: " + e.getMessage());
+            }
+        } else {
+            try {
+                file.createNewFile();
+                try (Writer writer = new FileWriter(file)) {
+                    writer.write("[]");
+                }
+            } catch (IOException e) {
+                OutputDevice.print("[ERROR] Failed to create people file: " + e.getMessage());
+                return;
+            }
+        }
+
+        // Create a new person data map with core fields
+        Map<String, Object> personData = new HashMap<>();
+        personData.put("type", type.toLowerCase());
+        personData.put("ID", id);
+        personData.put("weight", weight);
+        personData.put("height", height);
+        personData.put("startFloor", startFloor);
+        personData.put("destinationFloor", destinationFloor);
+
+        // Add optional fields if they are provided
+        if (optionalFields != null) {
+            personData.putAll(optionalFields);
+        }
+
+        people.add(personData);
+
+        try (Writer writer = new FileWriter(PEOPLE_FILE)) {
+            gson.toJson(people, writer);
+            OutputDevice.print("[INFO] New person saved to memory.");
+        } catch (IOException e) {
+            OutputDevice.print("[ERROR] Failed to save person: " + e.getMessage());
+        }
+    }
+
     private static void loadPeopleFromMemory(Application app) {
-        OutputDevice.print("[INFO] Loading people from memory...");
+        OutputDevice.print("[INFO] Loading person from memory...");
+
+        File file = new File(PEOPLE_FILE);
+        if (!file.exists()) {
+            OutputDevice.print("[INFO] No people data found. No people were saved previously.");
+            return;
+        }
+
+        Scanner scanner = new Scanner(System.in);
+        OutputDevice.print("Enter person ID to load:");
+        String personId = scanner.nextLine();
+
         try (Reader reader = new FileReader(PEOPLE_FILE)) {
-            Gson gson = new Gson();
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(Person.class, new PersonDeserializer())
+                    .create();
+
             List<Map<String, Object>> people = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
 
-            if (people != null) {
-                for (Map<String, Object> personData : people) {
-                    String type = (String) personData.get("type");
-                    int weight = ((Double) personData.get("weight")).intValue();
-                    int height = ((Double) personData.get("height")).intValue();
-                    int startFloor = ((Double) personData.get("startFloor")).intValue();
-                    int destinationFloor = ((Double) personData.get("destinationFloor")).intValue();
+            if (people != null && !people.isEmpty()) {
+                boolean personFound = false;
 
-                    Person person = createPerson(type, weight, height, new String[]{}); // adjust params if necessary
-                    if (person != null) {
-                        app.addPersonToQueue(person, startFloor, destinationFloor);
+                for (Map<String, Object> personData : people) {
+                    // Verify the ID and other required fields
+                    if (personData.containsKey("ID") && personId.equals(personData.get("ID"))) {
+                        personFound = true;
+
+                        try {
+                            String type = (String) personData.get("type");
+                            int weight = ((Double) personData.get("weight")).intValue();
+                            int height = ((Double) personData.get("height")).intValue();
+                            int startFloor = ((Double) personData.get("startFloor")).intValue();
+                            int destinationFloor = ((Double) personData.get("destinationFloor")).intValue();
+
+                            Person person = createPerson(type, weight, height, new String[]{});
+                            if (person != null) {
+                                app.addPersonToQueue(person, startFloor, destinationFloor);
+                                OutputDevice.print("[INFO] " + person.getClass().getSimpleName() + " loaded and added to queue on floor " + startFloor);
+                            }
+                        } catch (Exception e) {
+                            OutputDevice.print("[ERROR] Invalid data format for person ID " + personId + ". Skipping entry.");
+                        }
                     }
                 }
-                OutputDevice.print("[INFO] People loaded from memory.");
+
+                if (!personFound) {
+                    OutputDevice.print("[INFO] Person with ID " + personId + " not found in memory.");
+                }
+            } else {
+                OutputDevice.print("[INFO] No people data found. No people were saved previously.");
             }
         } catch (IOException e) {
             OutputDevice.print("[ERROR] Failed to load people: " + e.getMessage());
         }
     }
-
 }

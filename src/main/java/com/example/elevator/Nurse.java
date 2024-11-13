@@ -28,4 +28,8 @@ public class Nurse extends Person{
         this.emergencyLevel = level;
     }
 
+    public int getEmergencyLevel() {
+        return emergencyLevel;
+    }
+
 }
