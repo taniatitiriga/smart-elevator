@@ -48,6 +48,7 @@ public class Agenda {
         }
         return null;
     }
+
     public boolean isFull() {
         return getAvailableSpace() <= 0.5 || getAvailableWeight() <= 80;
     }
@@ -148,7 +149,6 @@ public class Agenda {
         return nextStop;
     }
 
-
     public void sortAndGroup() {
         for (Queue<Person> floorQueue : queuesByFloor.values()) {
             List<Person> sortedList = new ArrayList<>(floorQueue);
@@ -171,7 +171,6 @@ public class Agenda {
                 .sum();
         return Math.max(0, elevator.getWeight() - usedWeight);
     }
-
 
     public boolean evaluateStop(Elevator elevator, int floor) {
         Queue<Person> floorQueue = queuesByFloor.get(floor);

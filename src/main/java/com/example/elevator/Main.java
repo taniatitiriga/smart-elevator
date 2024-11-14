@@ -115,7 +115,6 @@ public class Main {
         }
     }
 
-    // Helper method to parse integers and throw a custom exception if parsing fails
     private static int parseInt(String value) throws InvalidNumberFormatException {
         try {
             return Integer.parseInt(value);
