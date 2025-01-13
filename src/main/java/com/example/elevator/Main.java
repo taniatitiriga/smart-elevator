@@ -259,8 +259,6 @@ public class Main {
         OutputDevice.print("\n=== Session Mode ===");
         OutputDevice.print("This session behaves like the demo but includes loading people from memory.");
 
-        Scanner scanner = new Scanner(System.in);
-
         while (true) {
             OutputDevice.print("Enter a command (or type 'exit' to quit):");
             String input = InputDevice.getInput().trim();
@@ -323,6 +321,67 @@ public class Main {
         }
     }
 
+    private static void loadPeopleFromMemory(Application app) {
+        OutputDevice.print("[INFO] Loading people from memory...");
+        File file = new File(PEOPLE_FILE);
+
+        if (!file.exists()) {
+            OutputDevice.print("[INFO] No people data found. No people were saved previously.");
+            return;
+        }
+
+        try (Reader reader = new FileReader(PEOPLE_FILE)) {
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(Person.class, new PersonDeserializer())
+                    .create();
+
+            List<Map<String, Object>> people = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
+
+            if (people == null || people.isEmpty()) {
+                OutputDevice.print("[INFO] No people data found. No people were saved previously.");
+                return;
+            }
+
+            while (true) {
+                OutputDevice.print("Enter person ID to load (leave blank to finish):");
+                String personId = InputDevice.getInput().trim();
+
+                if (personId.isEmpty()) {
+                    OutputDevice.print("[INFO] Finished loading people.");
+                    break;
+                }
+
+                boolean personFound = false;
+                for (Map<String, Object> personData : people) {
+                    if (personData.containsKey("ID") && personId.equals(personData.get("ID"))) {
+                        personFound = true;
+                        try {
+                            String type = (String) personData.get("type");
+                            int weight = ((Double) personData.get("weight")).intValue();
+                            int height = ((Double) personData.get("height")).intValue();
+                            int startFloor = ((Double) personData.get("startFloor")).intValue();
+                            int destinationFloor = ((Double) personData.get("destinationFloor")).intValue();
+
+                            Person person = createPerson(type, weight, height, new String[]{});
+                            if (person != null) {
+                                app.addPersonToQueue(person, startFloor, destinationFloor);
+                                OutputDevice.print("[INFO] " + person.getClass().getSimpleName() + " loaded and added to queue on floor " + startFloor);
+                            }
+                        } catch (Exception e) {
+                            OutputDevice.print("[ERROR] Invalid data format for person ID " + personId + ". Skipping entry.");
+                        }
+                    }
+                }
+
+                if (!personFound) {
+                    OutputDevice.print("[INFO] Person with ID " + personId + " not found in memory.");
+                }
+            }
+        } catch (IOException e) {
+            OutputDevice.print("[ERROR] Failed to load people: " + e.getMessage());
+        }
+    }
+
     private static void savePersonToMemory(String type, String id, int weight, int height, int startFloor, int destinationFloor, Map<String, Object> optionalFields) {
         if (id == null || weight <= 0 || height <= 0 || destinationFloor < 0) {
             OutputDevice.print("[ERROR] Invalid person data. Person not saved to memory.");
@@ -377,60 +436,4 @@ public class Main {
         }
     }
 
-    private static void loadPeopleFromMemory(Application app) {
-        OutputDevice.print("[INFO] Loading person from memory...");
-
-        File file = new File(PEOPLE_FILE);
-        if (!file.exists()) {
-            OutputDevice.print("[INFO] No people data found. No people were saved previously.");
-            return;
-        }
-
-        Scanner scanner = new Scanner(System.in);
-        OutputDevice.print("Enter person ID to load:");
-        String personId = scanner.nextLine();
-
-        try (Reader reader = new FileReader(PEOPLE_FILE)) {
-            Gson gson = new GsonBuilder()
-                    .registerTypeAdapter(Person.class, new PersonDeserializer())
-                    .create();
-
-            List<Map<String, Object>> people = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
-
-            if (people != null && !people.isEmpty()) {
-                boolean personFound = false;
-
-                for (Map<String, Object> personData : people) {
-                    // Verify the ID and other required fields
-                    if (personData.containsKey("ID") && personId.equals(personData.get("ID"))) {
-                        personFound = true;
-
-                        try {
-                            String type = (String) personData.get("type");
-                            int weight = ((Double) personData.get("weight")).intValue();
-                            int height = ((Double) personData.get("height")).intValue();
-                            int startFloor = ((Double) personData.get("startFloor")).intValue();
-                            int destinationFloor = ((Double) personData.get("destinationFloor")).intValue();
-
-                            Person person = createPerson(type, weight, height, new String[]{});
-                            if (person != null) {
-                                app.addPersonToQueue(person, startFloor, destinationFloor);
-                                OutputDevice.print("[INFO] " + person.getClass().getSimpleName() + " loaded and added to queue on floor " + startFloor);
-                            }
-                        } catch (Exception e) {
-                            OutputDevice.print("[ERROR] Invalid data format for person ID " + personId + ". Skipping entry.");
-                        }
-                    }
-                }
-
-                if (!personFound) {
-                    OutputDevice.print("[INFO] Person with ID " + personId + " not found in memory.");
-                }
-            } else {
-                OutputDevice.print("[INFO] No people data found. No people were saved previously.");
-            }
-        } catch (IOException e) {
-            OutputDevice.print("[ERROR] Failed to load people: " + e.getMessage());
-        }
-    }
 }

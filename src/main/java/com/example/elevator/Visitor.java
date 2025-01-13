@@ -11,4 +11,8 @@ public class Visitor extends Person{
         return 1;
     }
 
+    @Override
+    public String getType() {
+        return "Visitor";
+    }
 }

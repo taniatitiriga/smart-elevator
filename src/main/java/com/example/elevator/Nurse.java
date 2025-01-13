@@ -32,4 +32,8 @@ public class Nurse extends Person{
         return emergencyLevel;
     }
 
+    @Override
+    public String getType() {
+        return "Nurse";
+    }
 }

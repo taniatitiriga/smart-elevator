@@ -31,4 +31,8 @@ public class Doctor extends Person{
         return emergencyLevel;
     }
 
+    @Override
+    public String getType() {
+        return "Doctor";
+    }
 }

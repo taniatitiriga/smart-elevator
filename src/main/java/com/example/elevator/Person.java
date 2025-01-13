@@ -65,4 +65,6 @@ public abstract class Person implements Surface, Weight {
     public int getEffectivePriority() {
         return temporaryPriorityBoost ? getPriorityLevel() + 10 : getPriorityLevel();
     }
+
+    public abstract String getType();
 }

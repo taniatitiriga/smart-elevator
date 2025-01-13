@@ -9,7 +9,6 @@ public class Application {
     private Elevator elevator;
     private Agenda agenda;
 
-    // Initialize the application and create an elevator
     public void addElevator(int maxWeight, int width, int depth, int[] floors, int currentFloor) {
         this.elevator = new Elevator(IDGenerator.generateElevatorID(), maxWeight, width, depth, floors, currentFloor);
         this.agenda = new Agenda(elevator, new LinkedList<>(), new HashMap<>());
@@ -36,17 +35,17 @@ public class Application {
         OutputDevice.print("\n=== Starting Elevator Session ===\n");
         while (true) {
             if (agenda.areAllQueuesEmpty()) {
+                clearScreen();
                 OutputDevice.print("\n[INFO] Session complete. No further destinations.\n");
                 break;
             }
 
-            printSessionSeparator();
-            int currentFloor = elevator.getCurrentFloor();
-            OutputDevice.print("[INFO] Elevator at floor: " + currentFloor);
-            printQueues();
+            clearScreen();
+            printElevatorState();
 
-            // Determine the next floor and move the elevator accordingly
+            int currentFloor = elevator.getCurrentFloor();
             int nextFloor = agenda.determineNextDestination(elevator);
+
             while (nextFloor != currentFloor) {
                 if (nextFloor > currentFloor) {
                     elevator.moveUp();
@@ -54,18 +53,80 @@ public class Application {
                     elevator.moveDown();
                 }
                 currentFloor = elevator.getCurrentFloor();
-                OutputDevice.print("[INFO] Elevator at floor: " + currentFloor);
-                agenda.updatePassengerFloorsPassed();
+                clearScreen();
+                printElevatorState();
             }
 
-            // Handle boarding and unboarding at the current floor
-            OutputDevice.print("\n[INFO] Handling passengers at floor: " + currentFloor);
             agenda.unboardPassengers(elevator);
             agenda.boardPassengers(elevator);
+
+            awaitUserInput();
         }
     }
 
-    // Display the state of all queues (both floor queues and inside the elevator)
+    private void awaitUserInput() {
+        OutputDevice.print("\nPress Enter to continue...");
+        InputDevice.getInput();
+    }
+
+    private void clearScreen() {
+        try {
+            if (System.getProperty("os.name").contains("Windows")) {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+            }
+        } catch (Exception e) {
+            OutputDevice.print("[ERROR] Failed to clear screen.");
+        }
+    }
+
+    private void printElevatorState() {
+        int totalFloors = elevator.getFloors().length;
+        int elevatorPosition = elevator.getCurrentFloor();
+        Map<Integer, Queue<Person>> floorQueues = agenda.getQueuesByFloor();
+        Queue<Person> elevatorQueue = agenda.getQueueInside();
+
+        for (int floor = totalFloors - 1; floor >= 0; floor--) {
+            StringBuilder floorLine = new StringBuilder();
+
+            // Floor number
+            floorLine.append(String.format("%2d |", floor));
+
+            // Elevator
+            if (floor == elevatorPosition) {
+                floorLine.append("[");
+                if (!elevatorQueue.isEmpty()) {
+                    for (Person person : elevatorQueue) {
+                        floorLine.append(person.getType().charAt(0)); // First letter of type (P, D, N, V)
+                    }
+                } else {
+                    floorLine.append(" ");
+                }
+                floorLine.append("] ");
+            } else {
+                floorLine.append("    "); // Empty space where the elevator isn't
+            }
+
+            // Floor queue
+            floorLine.append("Queue: ");
+            Queue<Person> queue = floorQueues.getOrDefault(floor, new LinkedList<>());
+            if (queue.isEmpty()) {
+                floorLine.append("-");
+            } else {
+                for (Person person : queue) {
+                    floorLine.append(person.getType().charAt(0)).append(" "); // First letter of type
+                }
+            }
+
+            // Print the floor
+            OutputDevice.print(floorLine.toString());
+        }
+
+        OutputDevice.print("\n--------------------------------------\n");
+    }
+
     private void printQueues() {
         OutputDevice.print("=== Inside Elevator Queue ===");
         if (agenda.getQueueInside().isEmpty()) {

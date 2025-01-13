@@ -70,4 +70,9 @@ public class Patient extends Person{
     public WalkingAid getWalkingAid() {
         return walkingAid;
     }
+
+    @Override
+    public String getType() {
+        return "Patient";
+    }
 }
