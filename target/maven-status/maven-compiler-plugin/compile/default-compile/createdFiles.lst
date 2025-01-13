@@ -15,6 +15,7 @@ com/example/elevator/InputDevice.class
 com/example/elevator/Nurse.class
 com/example/elevator/CustomExceptions.class
 com/example/elevator/Surface.class
+com/example/elevator/TextColor.class
 com/example/elevator/Agenda.class
 com/example/elevator/Elevator.class
 com/example/elevator/Main$1.class

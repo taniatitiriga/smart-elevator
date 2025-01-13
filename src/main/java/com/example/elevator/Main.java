@@ -31,15 +31,15 @@ public class Main {
                     newElevator(app);
                     break;
                 case "exit":
-                    OutputDevice.print("[INFO] Exiting the application. Goodbye!");
+                    OutputDevice.printInfo("Exiting the application. Goodbye!");
                     scanner.close();
                     return;
                 default:
-                    OutputDevice.print("[ERROR] Invalid option. Try one of the following options:\n- demo: Run an instant demo\n- load: Load elevator from memory\n- new: New elevator");
+                    OutputDevice.printError("Invalid option. Try one of the following options:\n- demo: Run an instant demo\n- load: Load elevator from memory\n- new: New elevator");
                     break;
             }
         } else {
-            OutputDevice.print("[ERROR] No option selected. Try one of the following options:\n- demo: Run an instant demo\n- load: Load elevator from memory\n- new: New elevator");
+            OutputDevice.printError("No option selected. Try one of the following options:\n- demo: Run an instant demo\n- load: Load elevator from memory\n- new: New elevator");
         }
     }
 
@@ -55,7 +55,7 @@ public class Main {
             String input = InputDevice.getInput().trim();
 
             if (input.equalsIgnoreCase("exit")) {
-                OutputDevice.print("[INFO] Exiting demo mode.");
+                OutputDevice.printInfo("Exiting demo mode.");
                 break;
             }
 
@@ -74,7 +74,7 @@ public class Main {
                                 int[] floors = {0, 1, 2, 3, 4, 5, 6, 7};  // Example floors
                                 app.addElevator(maxWeight, width, depth, floors, currentFloor);
                             } catch (InvalidNumberFormatException e) {
-                                OutputDevice.print("[ERROR] " + e.getMessage());
+                                OutputDevice.printError(e.getMessage());
                             }
                         } else {
                             throw new InvalidCommandException("Incorrect format for elevator command. Usage: elevator max_weight width depth current_floor");
@@ -95,7 +95,7 @@ public class Main {
                                     app.addPersonToQueue(person, startFloor, destinationFloor);
                                 }
                             } catch (InvalidNumberFormatException e) {
-                                OutputDevice.print("[ERROR] " + e.getMessage());
+                                OutputDevice.printError(e.getMessage());
                             }
                         } else {
                             throw new InvalidCommandException("Incorrect format for person command. Usage: person type weight height start_floor destination_floor [extra]");
@@ -110,7 +110,7 @@ public class Main {
                         throw new InvalidCommandException("Unknown command: '" + command + "'. Try 'elevator', 'person', or 'start'.");
                 }
             } catch (InvalidCommandException e) {
-                OutputDevice.print("[ERROR] " + e.getMessage());
+                OutputDevice.printError(e.getMessage());
             }
         }
     }
@@ -151,17 +151,18 @@ public class Main {
                     }
                     return doctor;
                 default:
-                    OutputDevice.print("[ERROR] Invalid person type. Use 'visitor', 'patient', 'nurse', or 'doctor'.");
+                    OutputDevice.printError("Invalid person type. Use 'visitor', 'patient', 'nurse', or 'doctor'.");
                     return null;
             }
         } catch (IllegalArgumentException e) {
-            OutputDevice.print("[ERROR] Invalid argument: " + e.getMessage());
+            OutputDevice.printError("Invalid argument: " + e.getMessage());
             return null;
         }
     }
 
     private static void loadElevator(Application app) {
-        OutputDevice.print("[INFO] Loading elevator from memory...");
+        OutputDevice.printInfo("Loading elevator from memory...");
+        app.clearScreen();
 
         try (Reader reader = new FileReader(ELEVATOR_FILE)) {
             Gson gson = new Gson();
@@ -181,15 +182,15 @@ public class Main {
                 app.addElevator(loadedElevator.getMaxWeight(), loadedElevator.getWidth(), loadedElevator.getDepth(), loadedElevator.getFloors(), loadedElevator.getCurrentFloor());
                 runSession(app); // Call session with loaded elevator
             } else {
-                OutputDevice.print("[ERROR] Elevator with ID " + elevatorId + " not found.");
+                OutputDevice.printError("Elevator with ID " + elevatorId + " not found.");
             }
         } catch (IOException e) {
-            OutputDevice.print("[ERROR] Failed to load elevator: " + e.getMessage());
+            OutputDevice.printError("Failed to load elevator: " + e.getMessage());
         }
     }
 
     private static void newElevator(Application app) {
-        OutputDevice.print("[INFO] Creating a new elevator...");
+        OutputDevice.printInfo("Creating a new elevator...");
         Scanner scanner = new Scanner(System.in);
 
         OutputDevice.print("Enter maximum weight:");
@@ -227,7 +228,7 @@ public class Main {
                 elevators = gson.fromJson(reader, new TypeToken<List<Elevator>>(){}.getType());
                 if (elevators == null) elevators = new ArrayList<>();
             } catch (IOException e) {
-                OutputDevice.print("[ERROR] Failed to read elevator file: " + e.getMessage());
+                OutputDevice.printError("Failed to read elevator file: " + e.getMessage());
             }
         } else {
             // Create the file and initialize it with an empty JSON array if it doesn't exist
@@ -237,7 +238,7 @@ public class Main {
                     writer.write("[]"); // Initialize with empty JSON array
                 }
             } catch (IOException e) {
-                OutputDevice.print("[ERROR] Failed to create elevator file: " + e.getMessage());
+                OutputDevice.printError("Failed to create elevator file: " + e.getMessage());
                 return;
             }
         }
@@ -249,22 +250,23 @@ public class Main {
         // Write updated elevator list back to file
         try (Writer writer = new FileWriter(ELEVATOR_FILE)) {
             gson.toJson(elevators, writer);
-            OutputDevice.print("[INFO] New elevator saved to memory.");
+            OutputDevice.printInfo("New elevator saved to memory.");
         } catch (IOException e) {
-            OutputDevice.print("[ERROR] Failed to save elevator: " + e.getMessage());
+            OutputDevice.printError("Failed to save elevator: " + e.getMessage());
         }
     }
 
     private static void runSession(Application app) {
-        OutputDevice.print("\n=== Session Mode ===");
-        OutputDevice.print("This session behaves like the demo but includes loading people from memory.");
+        app.clearScreen();
+        OutputDevice.print("=== Managing passengers ===\n");
+        OutputDevice.print("Available commands:\nloadpeople - load existing people from memory\nperson - create a new person\nstart - start the elevator\n");
 
         while (true) {
             OutputDevice.print("Enter a command (or type 'exit' to quit):");
             String input = InputDevice.getInput().trim();
 
             if (input.equalsIgnoreCase("exit")) {
-                OutputDevice.print("[INFO] Exiting session mode.");
+                OutputDevice.printInfo("Exiting session mode.");
                 break;
             }
 
@@ -299,10 +301,10 @@ public class Main {
                                 savePersonToMemory(type, person.getID(), weight, height, startFloor, destinationFloor, optionalFields);
                             }
                         } catch (NumberFormatException e) {
-                            OutputDevice.print("[ERROR] Invalid number format. Ensure weight, height, start floor, and destination floor are integers.");
+                            OutputDevice.printError("Invalid number format. Ensure weight, height, start floor, and destination floor are integers.");
                         }
                     } else {
-                        OutputDevice.print("[USAGE] person type weight height start_floor destination_floor [extra: emergency level for staff or walking aid for patients]");
+                        OutputDevice.printUsage("person type weight height start_floor destination_floor [extra: emergency level for staff or walking aid for patients]");
                     }
                     break;
 
@@ -315,18 +317,18 @@ public class Main {
                     break;
 
                 default:
-                    OutputDevice.print("[ERROR] Unknown command: '" + command + "'. Try 'person', 'loadpeople', and 'start'.");
+                    OutputDevice.printError("Unknown command: '" + command + "'. Try 'person', 'loadpeople', and 'start'.");
                     break;
             }
         }
     }
 
     private static void loadPeopleFromMemory(Application app) {
-        OutputDevice.print("[INFO] Loading people from memory...");
+        OutputDevice.printInfo(" Loading people from memory...");
         File file = new File(PEOPLE_FILE);
 
         if (!file.exists()) {
-            OutputDevice.print("[INFO] No people data found. No people were saved previously.");
+            OutputDevice.printInfo("No people data found. No people were saved previously.");
             return;
         }
 
@@ -338,7 +340,7 @@ public class Main {
             List<Map<String, Object>> people = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
 
             if (people == null || people.isEmpty()) {
-                OutputDevice.print("[INFO] No people data found. No people were saved previously.");
+                OutputDevice.printInfo("No people data found. No people were saved previously.");
                 return;
             }
 
@@ -347,7 +349,7 @@ public class Main {
                 String personId = InputDevice.getInput().trim();
 
                 if (personId.isEmpty()) {
-                    OutputDevice.print("[INFO] Finished loading people.");
+                    OutputDevice.printInfo("Finished loading people.");
                     break;
                 }
 
@@ -365,26 +367,26 @@ public class Main {
                             Person person = createPerson(type, weight, height, new String[]{});
                             if (person != null) {
                                 app.addPersonToQueue(person, startFloor, destinationFloor);
-                                OutputDevice.print("[INFO] " + person.getClass().getSimpleName() + " loaded and added to queue on floor " + startFloor);
+//                                OutputDevice.printInfo( person.getClass().getSimpleName() + " loaded and added to queue on floor " + startFloor);
                             }
                         } catch (Exception e) {
-                            OutputDevice.print("[ERROR] Invalid data format for person ID " + personId + ". Skipping entry.");
+                            OutputDevice.printError("Invalid data format for person ID " + personId + ". Skipping entry.");
                         }
                     }
                 }
 
                 if (!personFound) {
-                    OutputDevice.print("[INFO] Person with ID " + personId + " not found in memory.");
+                    OutputDevice.printInfo("Person with ID " + personId + " not found in memory.");
                 }
             }
         } catch (IOException e) {
-            OutputDevice.print("[ERROR] Failed to load people: " + e.getMessage());
+            OutputDevice.printError("Failed to load people: " + e.getMessage());
         }
     }
 
     private static void savePersonToMemory(String type, String id, int weight, int height, int startFloor, int destinationFloor, Map<String, Object> optionalFields) {
         if (id == null || weight <= 0 || height <= 0 || destinationFloor < 0) {
-            OutputDevice.print("[ERROR] Invalid person data. Person not saved to memory.");
+            OutputDevice.printError("Invalid person data. Person not saved to memory.");
             return;
         }
 
@@ -398,7 +400,7 @@ public class Main {
                 people = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
                 if (people == null) people = new ArrayList<>();
             } catch (IOException e) {
-                OutputDevice.print("[ERROR] Failed to read people file: " + e.getMessage());
+                OutputDevice.printError("Failed to read people file: " + e.getMessage());
             }
         } else {
             try {
@@ -407,7 +409,7 @@ public class Main {
                     writer.write("[]");
                 }
             } catch (IOException e) {
-                OutputDevice.print("[ERROR] Failed to create people file: " + e.getMessage());
+                OutputDevice.printError("Failed to create people file: " + e.getMessage());
                 return;
             }
         }
@@ -430,9 +432,9 @@ public class Main {
 
         try (Writer writer = new FileWriter(PEOPLE_FILE)) {
             gson.toJson(people, writer);
-            OutputDevice.print("[INFO] New person saved to memory.");
+            OutputDevice.printInfo("New person saved to memory.");
         } catch (IOException e) {
-            OutputDevice.print("[ERROR] Failed to save person: " + e.getMessage());
+            OutputDevice.printError("Failed to save person: " + e.getMessage());
         }
     }
 

@@ -12,23 +12,23 @@ public class Application {
     public void addElevator(int maxWeight, int width, int depth, int[] floors, int currentFloor) {
         this.elevator = new Elevator(IDGenerator.generateElevatorID(), maxWeight, width, depth, floors, currentFloor);
         this.agenda = new Agenda(elevator, new LinkedList<>(), new HashMap<>());
-        OutputDevice.print("[INFO] Elevator created on floor: " + elevator.getCurrentFloor());
+        OutputDevice.printInfo("Elevator created on floor: " + elevator.getCurrentFloor());
     }
 
     // Add a person to the specified floor queue in Agenda
     public void addPersonToQueue(Person person, int startFloor, int destinationFloor) {
         if (agenda != null) {
             agenda.addPersonToQueue(person, startFloor, destinationFloor);
-            OutputDevice.print("[INFO] " + person.getClass().getSimpleName() + " added to queue on floor " + startFloor);
+            OutputDevice.printInfo(person.getClass().getSimpleName() + " added to queue on floor " + startFloor);
         } else {
-            OutputDevice.print("[ERROR] Please add an elevator before adding people.");
+            OutputDevice.printError("Please add an elevator before adding people.");
         }
     }
 
     // Start a session, which makes the elevator operate autonomously
     public void startSession() {
         if (agenda == null || elevator == null) {
-            OutputDevice.print("[ERROR] Initialize the elevator and agenda before starting the session.");
+            OutputDevice.printError("Initialize the elevator and agenda before starting the session.");
             return;
         }
 
@@ -36,12 +36,9 @@ public class Application {
         while (true) {
             if (agenda.areAllQueuesEmpty()) {
                 clearScreen();
-                OutputDevice.print("\n[INFO] Session complete. No further destinations.\n");
+                OutputDevice.printInfo("Session complete. No further destinations.\n");
                 break;
             }
-
-            clearScreen();
-            printElevatorState();
 
             int currentFloor = elevator.getCurrentFloor();
             int nextFloor = agenda.determineNextDestination(elevator);
@@ -53,23 +50,31 @@ public class Application {
                     elevator.moveDown();
                 }
                 currentFloor = elevator.getCurrentFloor();
-                clearScreen();
-                printElevatorState();
+//                clearScreen();
+//                printElevatorState();
             }
+
+            clearScreen();
+            OutputDevice.print("=== Elevator Before Handling Passengers ===");
+            printElevatorState();
+            awaitUserInput();
 
             agenda.unboardPassengers(elevator);
             agenda.boardPassengers(elevator);
 
+            clearScreen();
+            OutputDevice.print("=== Elevator After Handling Passengers ===");
+            printElevatorState();
             awaitUserInput();
         }
     }
 
     private void awaitUserInput() {
-        OutputDevice.print("\nPress Enter to continue...");
+        OutputDevice.print("Press Enter to continue...");
         InputDevice.getInput();
     }
 
-    private void clearScreen() {
+    public void clearScreen() {
         try {
             if (System.getProperty("os.name").contains("Windows")) {
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
@@ -78,7 +83,7 @@ public class Application {
                 System.out.flush();
             }
         } catch (Exception e) {
-            OutputDevice.print("[ERROR] Failed to clear screen.");
+            OutputDevice.printError("Failed to clear screen.");
         }
     }
 
@@ -88,7 +93,7 @@ public class Application {
         Map<Integer, Queue<Person>> floorQueues = agenda.getQueuesByFloor();
         Queue<Person> elevatorQueue = agenda.getQueueInside();
 
-        for (int floor = totalFloors - 1; floor >= 0; floor--) {
+        for (int floor = totalFloors; floor >= 1; floor--) {
             StringBuilder floorLine = new StringBuilder();
 
             // Floor number
@@ -99,7 +104,7 @@ public class Application {
                 floorLine.append("[");
                 if (!elevatorQueue.isEmpty()) {
                     for (Person person : elevatorQueue) {
-                        floorLine.append(person.getType().charAt(0)); // First letter of type (P, D, N, V)
+                        floorLine.append(person.getType().charAt(0)+"(d:"+person.getDestinationFloor()+" p:"+person.getEffectivePriority()+") ");
                     }
                 } else {
                     floorLine.append(" ");
@@ -116,7 +121,7 @@ public class Application {
                 floorLine.append("-");
             } else {
                 for (Person person : queue) {
-                    floorLine.append(person.getType().charAt(0)).append(" "); // First letter of type
+                    floorLine.append(person.getType().charAt(0)+"(d:"+person.getDestinationFloor()+" p:"+person.getEffectivePriority()+") "); // First letter of type
                 }
             }
 
@@ -156,7 +161,6 @@ public class Application {
         }
     }
 
-    // Print a separator for session steps
     private void printSessionSeparator() {
         OutputDevice.print("\n--------------------------------------");
     }

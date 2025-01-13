@@ -103,7 +103,7 @@ public class Agenda {
 
             // Check if the destination floor is accessible
             if (!elevator.canAccessFloor(destination)) {
-                OutputDevice.print("[ERROR] Elevator cannot access floor " + destination + ". Ignoring this request.");
+                OutputDevice.printError("Elevator cannot access floor " + destination + ". Ignoring this request.");
                 return elevator.getCurrentFloor(); // Stay on the current floor if the floor is not accessible
             }
         } else {
