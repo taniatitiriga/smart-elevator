@@ -55,6 +55,7 @@ public class Application {
                 }
                 currentFloor = elevator.getCurrentFloor();
                 OutputDevice.print("[INFO] Elevator at floor: " + currentFloor);
+                agenda.updatePassengerFloorsPassed();
             }
 
             // Handle boarding and unboarding at the current floor

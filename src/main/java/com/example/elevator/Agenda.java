@@ -36,7 +36,7 @@ public class Agenda {
 
     public Comparator<Person> comparePriority() {
         //compare by priority (bigger priority comes first)
-        return Comparator.comparingInt(Person::getPriorityLevel).reversed();
+        return Comparator.comparingInt(Person::getEffectivePriority).reversed();
     }
 
     public Person getNextPerson() {
@@ -61,6 +61,8 @@ public class Agenda {
         while (!floorQueue.isEmpty() && !isFull()) {
             Person person = floorQueue.peek();
 
+            assert person != null;
+            person.incrementFloorsPassed();
             int personWeight = person.getWeight();
             double personSize = person.getSurface();
 
@@ -111,7 +113,7 @@ public class Agenda {
                 if (!floorQueue.isEmpty()) {
                     Person firstPersonInQueue = floorQueue.peek();
 
-                    if (topPriorityPerson == null || firstPersonInQueue.getPriorityLevel() > topPriorityPerson.getPriorityLevel()) {
+                    if (topPriorityPerson == null || firstPersonInQueue.getEffectivePriority() > topPriorityPerson.getEffectivePriority()) {
                         topPriorityPerson = firstPersonInQueue;
                         destination = entry.getKey(); // Set destination to the person's current floor
                     }
@@ -122,7 +124,7 @@ public class Agenda {
         if (topPriorityPerson == null) {
             return elevator.getCurrentFloor();
         }else {
-            if (topPriorityPerson.getPriorityLevel() >= 6 || isFull()) {
+            if (topPriorityPerson.getEffectivePriority() >= 6 || isFull()) {
                 return destination;
             } else {
                 return getNextIntermediateStop(elevator.getCurrentFloor(), destination);
@@ -179,7 +181,8 @@ public class Agenda {
             return false;
         }
         // check if the highest priority on outside queue is greater than the one inside
-        return floorQueue.peek().getPriorityLevel() > queueInside.peek().getPriorityLevel();
+        assert queueInside.peek() != null;
+        return floorQueue.peek().getEffectivePriority() > queueInside.peek().getEffectivePriority();
     }
 
     public Queue<Person> getQueueInside() {
@@ -188,5 +191,12 @@ public class Agenda {
 
     public Map<Integer, Queue<Person>> getQueuesByFloor() {
         return queuesByFloor;
+    }
+
+    public void updatePassengerFloorsPassed() {
+        for (Person person : queueInside) {
+            person.incrementFloorsPassed();
+        }
+        sortAndGroup();
     }
 }

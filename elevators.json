@@ -1,1 +1,1 @@
-[{"ID":"E01","maxWeight":800,"width":2,"depth":2,"floors":[1,2,3,4,5,6,7],"currentFloor":1}]
+[{"ID":"E01","maxWeight":800,"width":2,"depth":2,"floors":[1,2,3,4,5,6,7],"currentFloor":1},{"ID":"E02","maxWeight":1000,"width":7,"depth":7,"floors":[1,2,3,4,5,6,7,8,9],"currentFloor":1}]
